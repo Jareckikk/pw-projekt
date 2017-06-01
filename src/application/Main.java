@@ -16,8 +16,8 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("windowView.fxml"));
         this.primaryStage = primaryStage;
-        this.primaryStage.setTitle("Projektowanie i Konfiguracja Sieci Komputerowych");       
-        primaryStage.setScene(new Scene(root, 550, 400));
+        this.primaryStage.setTitle("Programowanie Wspó³bie¿ne - Projekt");       
+        primaryStage.setScene(new Scene(root, 800, 400));
         primaryStage.show();
     }
     
