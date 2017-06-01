@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.mainController">
+   <center>
+      <GridPane prefHeight="399.0" prefWidth="602.0" BorderPane.alignment="CENTER">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" maxWidth="473.0" minWidth="10.0" prefWidth="356.0" />
+          <ColumnConstraints hgrow="SOMETIMES" maxWidth="494.0" minWidth="10.0" prefWidth="228.0" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints maxHeight="123.0" minHeight="0.0" prefHeight="36.0" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="302.0" minHeight="10.0" prefHeight="291.0" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="74.0" minHeight="10.0" prefHeight="33.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <padding>
+            <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+         </padding>
+         <children>
+            <ListView fx:id="varList" prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="1">
+               <GridPane.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </GridPane.margin>
+            </ListView>
+            <TextField fx:id="inputCmd" GridPane.rowIndex="2">
+               <GridPane.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </GridPane.margin>
+            </TextField>
+            <Button mnemonicParsing="false" onAction="#addVariable" text="Dodaj zmienną" GridPane.columnIndex="1">
+               <GridPane.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </GridPane.margin>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#send" text="Wyślij" GridPane.columnIndex="1" GridPane.rowIndex="2">
+               <GridPane.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </GridPane.margin>
+            </Button>
+            <GridPane GridPane.columnIndex="1" GridPane.rowIndex="1">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints maxHeight="95.0" minHeight="0.0" prefHeight="20.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="272.0" minHeight="0.0" prefHeight="255.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="200.0" minHeight="0.0" prefHeight="21.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <Label fx:id="ipLabel" text="IP">
+                     <GridPane.margin>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </GridPane.margin>
+                  </Label>
+                  <Label fx:id="statusNote" text="Info" GridPane.rowIndex="2">
+                     <GridPane.margin>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </GridPane.margin>
+                  </Label>
+               </children>
+            </GridPane>
+            <GridPane>
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="84.0" minWidth="10.0" prefWidth="73.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="123.0" minWidth="10.0" prefWidth="105.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <TextField fx:id="varName" GridPane.columnIndex="1">
+                     <GridPane.margin>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </GridPane.margin>
+                  </TextField>
+                  <TextField fx:id="varValue" GridPane.columnIndex="3" />
+                  <Label text="Zmienna: " GridPane.halignment="RIGHT" />
+                  <Label text="Wartość: " GridPane.columnIndex="2" GridPane.halignment="RIGHT" />
+               </children>
+            </GridPane>
+         </children>
+      </GridPane>
+   </center>
+</BorderPane>
