@@ -1,11 +1,15 @@
 package application;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -37,6 +41,10 @@ public class mainController {
     }
     
     public void executeSingleJob(){
+    	if(leftImage != null){
+    		BufferedImage image = SwingFXUtils.fromFXImage(leftImage, null);
+			ImageHandler.split(image, Integer.parseInt(tList.getValue()), 1);  //TODO
+    	}
     	
     }
     
