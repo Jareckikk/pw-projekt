@@ -44,6 +44,8 @@ public class mainController {
     	if(leftImage != null){
     		BufferedImage image = SwingFXUtils.fromFXImage(leftImage, null);
 			ImageHandler.split(image, Integer.parseInt(tList.getValue()), 1);  //TODO
+			
+			
     	}
     	
     }

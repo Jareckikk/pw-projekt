@@ -37,4 +37,39 @@ public class ImageHandler {
 	     return imgs;
 	}
 
+	public static BufferedImage merge(BufferedImage[] imgs, int rows, int cols){
+        int chunks = rows * cols;
+        int chunkWidth, chunkHeight;
+        int type;
+        //fetching image files
+       /* File[] imgFiles = new File[chunks];
+        for (int i = 0; i < chunks; i++) {
+            imgFiles[i] = new File("archi" + i + ".jpg");
+        }*/
+
+       //creating a bufferd image array from image files
+       /* BufferedImage[] buffImages = new BufferedImage[chunks];
+        for (int i = 0; i < chunks; i++) {
+            buffImages[i] = ImageIO.read(imgFiles[i]);
+        }*/
+        type = imgs[0].getType();
+        chunkWidth = imgs[0].getWidth();
+        chunkHeight = imgs[0].getHeight();
+
+        //Initializing the final image
+        BufferedImage finalImg = new BufferedImage(chunkWidth*cols, chunkHeight*rows, type);
+
+        int num = 0;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                finalImg.createGraphics().drawImage(imgs[num], chunkWidth * j, chunkHeight * i, null);
+                num++;
+            }
+        }
+        System.out.println("Image concatenated.....");
+        
+        return finalImg;
+        //ImageIO.write(finalImg, "jpeg", new File("finalImg.jpg"));
+	}
+	
 }
