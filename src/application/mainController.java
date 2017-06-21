@@ -22,6 +22,8 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
@@ -32,9 +34,14 @@ import paralel.SemaphoreThread;
 
 public class mainController {
 
-	private Boolean useSemaphores = false; //@TODO: to tez do gui podepnij
-
-	private int concurrentThreadsRunning = 512; //@TODO: moglbys to podpi¹c do GUI ?
+	@FXML
+	private ToggleButton useSemaphores;
+	
+	//private Boolean useSemaphores = false; //@TODO: to tez do gui podepnij
+	
+	@FXML
+	private TextField conThreadNum;
+	//private int concurrentThreadsRunning = 512; //@TODO: moglbys to podpi¹c do GUI ?
 	// liczba watkow, ktore maja jednoczesnie dzialac (nie jest to liczba utworzonych watkow).
 
 	@FXML
@@ -103,7 +110,7 @@ public class mainController {
     	if(leftImageView.getImage() == null){
     		this.benchResultLabel.setText("Nie wybrano obrazu!");
     		return;
-    	}else if(filterList.getValue() == null){
+    	}else if(filterListPerformance.getValue() == null){
     		this.benchResultLabel.setText("Nie wybrano filtra!");
     		return;
     	}
@@ -166,7 +173,7 @@ public class mainController {
 
     /// przetwarzanie przy uzyciu semaforow i synchronized
     public void ApplySelectedFilter(BufferedImage[] imageParts, String filterName, boolean isBenchmark) throws InterruptedException {
-    	if(useSemaphores) {
+    	if(useSemaphores.isPressed()) {
     		UseSemaphoreMethod(imageParts, filterName, isBenchmark);
     	} else {
     		UseExecutorMethod(imageParts, filterName, isBenchmark);
@@ -179,7 +186,7 @@ public class mainController {
 
     	AbstractBufferedImageOp filter = GetSelectedFilter(filterName, imageHeight);
 
-    	ExecutorService poolExecutor = Executors.newFixedThreadPool(concurrentThreadsRunning);
+    	ExecutorService poolExecutor = Executors.newFixedThreadPool(Integer.parseInt(conThreadNum.getText()));
     	AvailableImagePartProvider partProvider = new AvailableImagePartProvider(threads);
     	ArrayList<Callable<Void>> pool = CreatePool(threads, () -> new ExecutorThread(filter, imageParts, partProvider));
 
@@ -196,7 +203,7 @@ public class mainController {
 
     	AbstractBufferedImageOp filter = GetSelectedFilter(filterName, imageHeight);
 
-    	Semaphore sem = new Semaphore(concurrentThreadsRunning);
+    	Semaphore sem = new Semaphore(Integer.parseInt(conThreadNum.getText()));
     	AvailableImagePartProvider partProvider = new AvailableImagePartProvider(threads);
     	ArrayList<Thread> pool = CreatePool(threads, () -> new Thread(new SemaphoreThread(sem, filter, imageParts, partProvider)));
 
