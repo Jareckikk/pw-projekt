@@ -56,8 +56,6 @@ public class mainController {
 	private Label benchResultLabel;
 
 	private Image leftImage;
-	private Image rigthImage;
-
 
     public void initialize(){
     	System.setProperty("glass.accessible.force", "false");
@@ -91,9 +89,15 @@ public class mainController {
     	this.resultLabel.setText("Czas wykonania: " + estimatedTime + " ms");
     }
 
-    public void executePerformanceJob() throws InterruptedException{   
+    public void executePerformanceJob() throws InterruptedException{  
+    	//Kilka walidacji, ¿eby nie sypaæ wyj¹tków
+    	if(leftImageView.getImage() == null){
+    		this.resultLabel.setText("Nie wybrano obrazu!");
+    		return;
+    	}
     	Thread t = new Thread(new PerformanceRunner());
     	t.start();
+    	//Bez join bo nie odœwiezy progressBaru
     }
     
     private void SetImage(BufferedImage[] imageParts) {
@@ -103,6 +107,7 @@ public class mainController {
     	System.out.println("Image set");
     }
 
+    //Musialem przeladowac zeby nie aktualizowac obrazu wynikowego przy benchmarku
     public void ApplySelectedFilterSemaphore(BufferedImage[] imageParts, String filterName) throws InterruptedException{
     	ApplySelectedFilterSemaphore(imageParts, filterName, false);
     }
@@ -166,6 +171,7 @@ public class mainController {
     	benchChart.getData().clear();
     }
     
+    //Musi byæ na osobnym w¹tku inaczej nie aktualizuje progressbaru bo w¹tek g³ówny jest przyblokowany przez metodê.
     public class PerformanceRunner implements Runnable{
 		@Override
 		public void run() {		
@@ -188,6 +194,7 @@ public class mainController {
         	}	      
         	long estimatedTime = System.currentTimeMillis() - startTimeEntire;
 
+        	//Sposob na edycje danych z innego watku
         	Platform.runLater(new Runnable() {
                 @Override public void run() {
                 	benchChart.getData().add(dataSeries);
