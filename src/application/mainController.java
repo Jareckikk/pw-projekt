@@ -74,7 +74,7 @@ public class mainController {
     	}else if(filterList.getValue() == null){
     		this.resultLabel.setText("Nie wybrano filtra!");
     		return;
-    	} else if(tList.getValue() == null){
+    	}else if(tList.getValue() == null){
     		this.resultLabel.setText("Nie wybrano liczby w¹tków!");
     		return;
     	}
@@ -92,7 +92,10 @@ public class mainController {
     public void executePerformanceJob() throws InterruptedException{  
     	//Kilka walidacji, ¿eby nie sypaæ wyj¹tków
     	if(leftImageView.getImage() == null){
-    		this.resultLabel.setText("Nie wybrano obrazu!");
+    		this.benchResultLabel.setText("Nie wybrano obrazu!");
+    		return;
+    	}else if(filterList.getValue() == null){
+    		this.benchResultLabel.setText("Nie wybrano filtra!");
     		return;
     	}
     	Thread t = new Thread(new PerformanceRunner());
