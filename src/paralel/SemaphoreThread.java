@@ -27,7 +27,6 @@ public class SemaphoreThread implements Runnable {
 			Random rnd = new Random();
 			int partNo = _partProvider.getNextPart();
 			while(partNo >= 0){
-				Thread.sleep(rnd.nextInt(1000)); /// ¿eby namieszac w wykonywaniu i sprawdizc czy locki dzialaja.
 				_sem.acquire();
 				_filter.filter(_imageParts[partNo], _imageParts[partNo]);
 				partNo = _partProvider.getNextPart();

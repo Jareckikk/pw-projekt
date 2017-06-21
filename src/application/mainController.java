@@ -4,6 +4,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 import filters.AbstractBufferedImageOp;
@@ -24,16 +27,22 @@ import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import paralel.AvailableImagePartProvider;
+import paralel.ExecutorThread;
 import paralel.SemaphoreThread;
 
 public class mainController {
+
+	private Boolean useSemaphores = false; //@TODO: to tez do gui podepnij
+
+	private int concurrentThreadsRunning = 512; //@TODO: moglbys to podpi¹c do GUI ?
+	// liczba watkow, ktore maja jednoczesnie dzialac (nie jest to liczba utworzonych watkow).
 
 	@FXML
 	private ComboBox<String> filterList; //Lista filtrów na piewrszym oknie
 
 	@FXML
 	private ComboBox<String> filterListPerformance; //Lista filtrów na oknie wydajnoœæ
-	
+
 	@FXML
 	private LineChart<Integer, Integer> benchChart; //Wykres w oknie wydajnosc
 
@@ -45,13 +54,13 @@ public class mainController {
 
 	@FXML
 	private ImageView rightImageView;
-	
+
 	@FXML
 	private Label resultLabel;
-	
+
 	@FXML
 	private ProgressBar benchProgressBar;
-	
+
 	@FXML
 	private Label benchResultLabel;
 
@@ -78,7 +87,7 @@ public class mainController {
     		this.resultLabel.setText("Nie wybrano liczby w¹tków!");
     		return;
     	}
-    	
+
     	long startTime = System.currentTimeMillis();
     	if(leftImage != null){
     		BufferedImage image = SwingFXUtils.fromFXImage(leftImage, null);
@@ -89,7 +98,7 @@ public class mainController {
     	this.resultLabel.setText("Czas wykonania: " + estimatedTime + " ms");
     }
 
-    public void executePerformanceJob() throws InterruptedException{  
+    public void executePerformanceJob() throws InterruptedException{
     	//Kilka walidacji, ¿eby nie sypaæ wyj¹tków
     	if(leftImageView.getImage() == null){
     		this.benchResultLabel.setText("Nie wybrano obrazu!");
@@ -102,7 +111,7 @@ public class mainController {
     	t.start();
     	//Bez join bo nie odœwiezy progressBaru
     }
-    
+
     private void SetImage(BufferedImage[] imageParts) {
     	int rows = Integer.parseInt(tList.getValue());
     	Image img = SwingFXUtils.toFXImage(ImageHandler.merge(imageParts, rows, 1), null);
@@ -112,19 +121,18 @@ public class mainController {
 
     //Musialem przeladowac zeby nie aktualizowac obrazu wynikowego przy benchmarku
     public void ApplySelectedFilterSemaphore(BufferedImage[] imageParts, String filterName) throws InterruptedException{
-    	ApplySelectedFilterSemaphore(imageParts, filterName, false);
+    	ApplySelectedFilter(imageParts, filterName, false);
     }
-    
-    /// przetwarzanie przy uzyciu semaforow i synchronized
-    public void ApplySelectedFilterSemaphore(BufferedImage[] imageParts, String filterName, boolean isBenchmark) throws InterruptedException {
-    	int threads = imageParts.length;
-    	int imageHeight = (int) leftImage.getHeight();
-    	
+
+    private AbstractBufferedImageOp GetSelectedFilter(String filterName, int imageHeight) {
     	AbstractBufferedImageOp filter;
-   	
+
     	switch(filterName){
 	    	case "Filtr Gaussowski":
-	    		filter = new GaussianFilter(imageHeight/20);
+	    		int blur = (int)imageHeight/20;
+	    		if(blur<1)
+	    			blur = 1;
+	    		filter = new GaussianFilter(blur);
 	    		break;
 	    	case "Filtr Skala Szaroœci":
 	    		filter = new GrayscaleFilter();
@@ -138,15 +146,62 @@ public class mainController {
 	    	default:
 	    		filter = null;
     	}
-    	
-    	Semaphore sem = new Semaphore(1024); // TODO: mozna ustawic ile w¹tkow jednoczesnie ma dostep
 
-    	ArrayList<Thread> pool = new ArrayList<Thread>();
-    	AvailableImagePartProvider partProvider = new AvailableImagePartProvider(threads);
+    	return filter;
+    }
+
+    private <T> ArrayList<T> CreatePool(int threads, Callable<T> creatorFunction) {
+    	ArrayList<T> pool = new ArrayList<T>();
+
     	for (int i = 0; i< threads; i++) {
-    		pool.add(new Thread(new SemaphoreThread(sem, filter, imageParts, partProvider)));
-    		pool.get(i).start();
+    		try {
+				pool.add(creatorFunction.call());
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+    	return pool;
+    }
+
+    /// przetwarzanie przy uzyciu semaforow i synchronized
+    public void ApplySelectedFilter(BufferedImage[] imageParts, String filterName, boolean isBenchmark) throws InterruptedException {
+    	if(useSemaphores) {
+    		UseSemaphoreMethod(imageParts, filterName, isBenchmark);
+    	} else {
+    		UseExecutorMethod(imageParts, filterName, isBenchmark);
+    	}
+    }
+
+    private void UseExecutorMethod(BufferedImage[] imageParts, String filterName, boolean isBenchmark) throws InterruptedException {
+    	int threads = imageParts.length;
+    	int imageHeight = (int) leftImage.getHeight();
+
+    	AbstractBufferedImageOp filter = GetSelectedFilter(filterName, imageHeight);
+
+    	ExecutorService poolExecutor = Executors.newFixedThreadPool(concurrentThreadsRunning);
+    	AvailableImagePartProvider partProvider = new AvailableImagePartProvider(threads);
+    	ArrayList<Callable<Void>> pool = CreatePool(threads, () -> new ExecutorThread(filter, imageParts, partProvider));
+
+    	poolExecutor.invokeAll(pool);
+    	poolExecutor.shutdown();
+    	if(!isBenchmark){
+    		SetImage(imageParts);
+    	};
+    }
+
+    private void UseSemaphoreMethod(BufferedImage[] imageParts, String filterName, boolean isBenchmark) throws InterruptedException {
+    	int threads = imageParts.length;
+    	int imageHeight = (int) leftImage.getHeight();
+
+    	AbstractBufferedImageOp filter = GetSelectedFilter(filterName, imageHeight);
+
+    	Semaphore sem = new Semaphore(concurrentThreadsRunning);
+    	AvailableImagePartProvider partProvider = new AvailableImagePartProvider(threads);
+    	ArrayList<Thread> pool = CreatePool(threads, () -> new Thread(new SemaphoreThread(sem, filter, imageParts, partProvider)));
+
+    	for(Thread thread: pool)
+    		thread.start();
 
     	for (Thread thread : pool) {
 			thread.join();
@@ -156,6 +211,7 @@ public class mainController {
     		SetImage(imageParts);
     	};
     }
+
 
     public void chooseFile(){
     	FileChooser fileChooser = new FileChooser();
@@ -169,32 +225,32 @@ public class mainController {
         	leftImageView.setImage(leftImage);
     	}
     }
-    
+
     public void clearChart(){
     	benchChart.getData().clear();
     }
-    
+
     //Musi byæ na osobnym w¹tku inaczej nie aktualizuje progressbaru bo w¹tek g³ówny jest przyblokowany przez metodê.
     public class PerformanceRunner implements Runnable{
 		@Override
-		public void run() {		
+		public void run() {
             benchProgressBar.setProgress(0.0);
         	XYChart.Series<Integer, Integer> dataSeries = new XYChart.Series<Integer,Integer>();
             dataSeries.setName(filterListPerformance.getValue());
             long startTimeEntire = System.currentTimeMillis();
-        	for(int i = 0; i < 10; i ++){  
+        	for(int i = 0; i < 10; i ++){
         		long startTime = System.currentTimeMillis();
             	if(leftImage != null){
             		BufferedImage image = SwingFXUtils.fromFXImage(leftImage, null);
         			BufferedImage[] imageParts = ImageHandler.split(image, (int)Math.pow(2,i), 1);  //TODO
         			try {
-						ApplySelectedFilterSemaphore(imageParts, filterListPerformance.getValue(), true);
+						ApplySelectedFilter(imageParts, filterListPerformance.getValue(), true);
 					} catch (InterruptedException e) {e.printStackTrace();}
                 	Image img = SwingFXUtils.toFXImage(ImageHandler.merge(imageParts, (int)Math.pow(2,i), 1), null);
             	}
-            	dataSeries.getData().add(new XYChart.Data<Integer, Integer>((int)Math.pow(2,i), (int)(System.currentTimeMillis() - startTime)));       	
+            	dataSeries.getData().add(new XYChart.Data<Integer, Integer>((int)Math.pow(2,i), (int)(System.currentTimeMillis() - startTime)));
             	benchProgressBar.setProgress((double)(i+1)/10);
-        	}	      
+        	}
         	long estimatedTime = System.currentTimeMillis() - startTimeEntire;
 
         	//Sposob na edycje danych z innego watku
@@ -204,8 +260,8 @@ public class mainController {
                 	benchResultLabel.setText("Czas wykonania: " + estimatedTime + " ms");
                 }
             });
-        			
-		}   	
+
+		}
     }
-    
+
 }
